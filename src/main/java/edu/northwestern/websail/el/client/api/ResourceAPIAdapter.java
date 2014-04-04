@@ -28,7 +28,6 @@ public class ResourceAPIAdapter {
 		URL u = new URL(endPoint);
 		HttpURLConnection uc = (HttpURLConnection) u.openConnection();
 		uc.connect();
-		System.out.println(u);
 		int responseCode = uc.getResponseCode();
 		if (200 == responseCode) {
 			BufferedReader br = null;
