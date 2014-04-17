@@ -9,7 +9,7 @@ import java.util.ArrayList;
 
 import org.junit.Test;
 
-import edu.northwestern.websail.el.client.api.ResourceAPIAdapter;
+import edu.northwestern.websail.el.client.api.WebSAILWikifierAPIAdapter;
 import edu.northwestern.websail.el.client.api.model.ExtendedMentionDoc;
 import edu.northwestern.websail.wikiparser.parsers.model.WikiExtractedPage;
 
@@ -19,7 +19,7 @@ public class ResourceAPIAdapterTest {
 	
 	@Test
 	public void testGetPage() throws IOException{
-		ResourceAPIAdapter api = new ResourceAPIAdapter();
+		WebSAILWikifierAPIAdapter api = new WebSAILWikifierAPIAdapter();
 		Integer chicagoTitleId = 6886;
 		WikiExtractedPage chicago = api.getPage(chicagoTitleId);
 		assertNotNull("Page is not null", chicago);
@@ -29,7 +29,7 @@ public class ResourceAPIAdapterTest {
 	
 	@Test
 	public void testGetExampleMentions() throws IOException{
-		ResourceAPIAdapter api = new ResourceAPIAdapter();
+		WebSAILWikifierAPIAdapter api = new WebSAILWikifierAPIAdapter();
 		ArrayList<ExtendedMentionDoc> exampleMentions = api.getMentions(true, true);
 		assertNotNull("Mention list is not null", exampleMentions);
 		for(ExtendedMentionDoc mention: exampleMentions){
@@ -40,7 +40,7 @@ public class ResourceAPIAdapterTest {
 	
 	@Test
 	public void testGetTestMentions() throws IOException{
-		ResourceAPIAdapter api = new ResourceAPIAdapter();
+		WebSAILWikifierAPIAdapter api = new WebSAILWikifierAPIAdapter();
 		ArrayList<ExtendedMentionDoc> exampleMentions = api.getMentions(false, true);
 		assertNotNull("Mention list is not null", exampleMentions);
 		for(ExtendedMentionDoc mention: exampleMentions){
