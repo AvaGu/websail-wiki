@@ -8,7 +8,7 @@ import edu.northwestern.websail.el.adapter.wikidoc.model.MentionDoc;
 import edu.northwestern.websail.el.models.Token;
 
 public class ExtendedMentionDoc extends MentionDoc {
-
+	private String key;
 	private HashMap<Integer, FeatureDoc> featureSet;
 	private List<Token> contextTokens;
 	public ExtendedMentionDoc() {
@@ -43,4 +43,14 @@ public class ExtendedMentionDoc extends MentionDoc {
 		this.contextTokens = contextTokens;
 	}
 
+	public String getKey() {
+		return key;
+	}
+
+	public void setKey(String key) {
+		this.key = key;
+	}
+
+	
+	
 }
