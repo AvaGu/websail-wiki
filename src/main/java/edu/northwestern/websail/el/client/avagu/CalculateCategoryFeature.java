@@ -168,8 +168,8 @@ public class CalculateCategoryFeature {
 		System.out.println("Step 1: Getting all mentions");
 		ArrayList<ExtendedMentionDoc> mentions = adapter.getMentions(false, false);// true false   and false false
 		System.out.println("Found " + mentions.size() + " mentions\n");
-		boolean withMatchRate = true;
-		processMentions(mentions, true);
+		boolean withMatchRate = false;
+		processMentions(mentions, withMatchRate);
 		
 		if (withMatchRate == true){
 			System.out.println("Match rate : " +match + " / " + mentions.size());
