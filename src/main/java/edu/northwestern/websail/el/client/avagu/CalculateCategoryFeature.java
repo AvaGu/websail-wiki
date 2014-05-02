@@ -29,7 +29,7 @@ public class CalculateCategoryFeature {
 		
 		
 		FeatureSetDoc fsd = new FeatureSetDoc();
-		fsd.setMentionKey(mention.getSurface());
+		fsd.setMentionKey(mention.getKey());
 		ArrayList<FeatureDoc> fds = new ArrayList<FeatureDoc>();
 		FeatureDoc fd1 = new FeatureDoc();
 		fd1.setConceptId(candidates.get(0).getConcept().getTitleId());
@@ -67,7 +67,7 @@ public class CalculateCategoryFeature {
 	public static boolean calculateCategory(ExtendedMentionDoc mention, Set<String> knowledge, boolean withMatchRate) throws Exception{
 		ArrayList<CandidateDoc> categories = mention.getCandidates();
 		FeatureSetDoc fsd = new FeatureSetDoc();
-		fsd.setMentionKey(mention.getSurface());
+		fsd.setMentionKey(mention.getKey());
 		ArrayList<FeatureDoc> fds = new ArrayList<FeatureDoc>();
 		double max = 0;
 		int max_index = -1;
@@ -142,7 +142,7 @@ public class CalculateCategoryFeature {
 		int mentionNum = mentions.size();
 		int count = 1;
 		for (ExtendedMentionDoc md:mentions){
-			System.out.println("Process " + count + " / " + mentionNum + " : " + md.getSurface());
+			System.out.println("Process " + count + " / " + mentionNum + " : " + md.getSurface() + " : " + md.getKey());
 			ArrayList<CandidateDoc> candidates = md.getCandidates();
 			int numCand = candidates.size();
 			if (numCand == 0){
