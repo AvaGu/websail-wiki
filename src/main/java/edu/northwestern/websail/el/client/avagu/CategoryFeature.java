@@ -27,6 +27,7 @@ public class CategoryFeature {
 		//toDoMentions: parameters that should be passed into next recursion
 		ArrayList<ExtendedMentionDoc> toDoMentions = new ArrayList<ExtendedMentionDoc>();
 		for (ExtendedMentionDoc md:ambiguousMentions){
+			
 			count ++;
 			System.out.println("ProcessAmbiguousMentions : " + count);
 			//for upload use
@@ -164,11 +165,7 @@ public class CategoryFeature {
 	
 	
 	
-	
-	
-
-	public static void main(String[] args) throws Exception {
-		
+	public static void processMentions() throws Exception{
 		System.out.println("Step 1: Getting all mentions");
 		ArrayList<ExtendedMentionDoc> mentions = adapter.getMentions(true, false);
 		System.out.println("Found " + mentions.size() + " mentions\n");
@@ -190,6 +187,30 @@ public class CategoryFeature {
 	
 		processAmbiguousMentions(confirmedCategories, uniqueMentions);
 		processAmbiguousMentions(confirmedCategories, ambiguousMentions);
+	}
+	
+	public static void testMentions() throws Exception{
+		ArrayList<ExtendedMentionDoc> mentions = adapter.getMentions(true, false);
+		Set<String> mentionkeys = new HashSet<String>();
+		System.out.println(adapter.getPage(54342).getTitle().getTitle());
+		for (ExtendedMentionDoc md:mentions){
+			mentionkeys.add(md.getGold().getTitle());
+			
+		}
+		int count = 0;
+		
+//		for (WikiLink wl:wls){
+//			String title = wl.getTarget().getTitle();
+//			if (mentionkeys.contains(title)){
+//				count ++;
+//			}
+//		}
+		System.out.println(count);
+		
+	}
+	public static void main(String[] args) throws Exception {
+		testMentions();
+	
 //		// TODO Auto-generated method stub
 //		WebSAILWikifierAPIAdapter adapter = new WebSAILWikifierAPIAdapter();
 //		System.out.println(adapter.getMentions(true, true).get(0).getGold());
