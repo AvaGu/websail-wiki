@@ -234,8 +234,8 @@ public class WebSAILWikifierAPIAdapter {
 
 	public static void main(String[] args) throws Exception {
 		WebSAILWikifierAPIAdapter adapter = new WebSAILWikifierAPIAdapter();
-		System.out.println(adapter.getMentions(true, true).get(0).getGold());
-		System.out.println(adapter.getPage(6886).getInternalLinks().get(0)
+		System.out.println(adapter.getMentions(true, true).get(0).getCandidates().get(0).getConcept().getTitleId());
+		System.out.println(adapter.getPage(6886).getInternalLinks().get(0).getSurface() + "->" +adapter.getPage(6886).getInternalLinks().get(0)
 				.getTarget().getId());
 		System.out.println(adapter.getMentionFeature("testKey", "nor")
 				.getFeatureDocs().get(0).getFeatureValue("nor.testFeature1")
