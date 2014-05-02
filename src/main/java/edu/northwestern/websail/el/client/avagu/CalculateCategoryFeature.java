@@ -36,7 +36,12 @@ public class CalculateCategoryFeature {
 		fds.add(fd1);
 		fsd.setFeatureDocs(fds);
 		
-		return adapter.uploadMentionFeature(fsd);
+		try{
+			return adapter.uploadMentionFeature(fsd);
+		}
+		catch(Exception e){
+			return false;
+		}
 		
 		
 	}
@@ -46,6 +51,10 @@ public class CalculateCategoryFeature {
 		ArrayList<WikiLink> internalLinks = wkpage.getInternalLinks();
 		for (WikiLink il:internalLinks){
 			WikiExtractedPage ilpage = adapter.getPage(il.getTarget().getId());
+			if (ilpage == null){
+				System.out.println("Error: cannot find page for a internal link : " + il.getTarget().getId() + " : " + il.getTarget().getId());
+				continue;
+			}
 			ArrayList<WikiLink> wls = ilpage.getCategoryLinks();
 			for (WikiLink wl:wls){
 				String category = wl.getSurface();
@@ -54,7 +63,7 @@ public class CalculateCategoryFeature {
 		}
 		
 	}
-	public static boolean calculateCategory(ExtendedMentionDoc mention, Set<String> knowledge) throws Exception{
+	public static boolean calculateCategory(ExtendedMentionDoc mention, Set<String> knowledge, boolean withMatchRate) throws Exception{
 		ArrayList<CandidateDoc> categories = mention.getCandidates();
 		FeatureSetDoc fsd = new FeatureSetDoc();
 		fsd.setMentionKey(mention.getSurface());
@@ -95,24 +104,28 @@ public class CalculateCategoryFeature {
 			index ++;
 		}
 		
-		
-//		if (max_index != -1){
-//			int categoryBestId = categories.get(0).getConcept().getTitleId();
-//			int goldId = mention.getGold().getTitleId();
-//			if (categoryBestId == goldId){
-//				match ++;
-//			}
-//		}
-//		
+		if (withMatchRate == true){
+			if (max_index != -1){
+				int categoryBestId = categories.get(0).getConcept().getTitleId();
+				int goldId = mention.getGold().getTitleId();
+				if (categoryBestId == goldId){
+					match ++;
+				}
+			}
+		}
 		
 		fsd.setFeatureDocs(fds);
-		
-		return adapter.uploadMentionFeature(fsd);
+		try{
+			return adapter.uploadMentionFeature(fsd);
+		}
+		catch(Exception e){
+			return false;
+		}
 	}
-	public static void processMention(ExtendedMentionDoc mention) throws Exception{
+	public static void processMention(ExtendedMentionDoc mention, boolean withMatchRate) throws Exception{
 		Set<String> knowledge = new HashSet<String>();
 		learnCategory(mention, knowledge);
-		boolean result = calculateCategory(mention, knowledge);
+		boolean result = calculateCategory(mention, knowledge, withMatchRate);
 		if (result == true){
 			System.out.println("Upload ambiguous mention successful");
 		}
@@ -123,7 +136,7 @@ public class CalculateCategoryFeature {
 	
 	
 	
-	public static void processMentions(ArrayList<ExtendedMentionDoc> mentions) throws Exception{
+	public static void processMentions(ArrayList<ExtendedMentionDoc> mentions, boolean withMatchRate) throws Exception{
 		match = 0;
 		int mentionNum = mentions.size();
 		int count = 1;
@@ -144,7 +157,7 @@ public class CalculateCategoryFeature {
 				}
 			}
 			else{
-				processMention(md);
+				processMention(md, withMatchRate);
 			}
 			System.out.println("");
 			count ++;
@@ -153,11 +166,14 @@ public class CalculateCategoryFeature {
 	public static void main(String[] args) throws Exception {
 		// TODO Auto-generated method stub
 		System.out.println("Step 1: Getting all mentions");
-		ArrayList<ExtendedMentionDoc> mentions = adapter.getMentions(true, true);// true false   and false false
+		ArrayList<ExtendedMentionDoc> mentions = adapter.getMentions(false, false);// true false   and false false
 		System.out.println("Found " + mentions.size() + " mentions\n");
-		processMentions(mentions);
+		boolean withMatchRate = true;
+		processMentions(mentions, true);
 		
-		System.out.println("Match rate : " +match + " / " + mentions.size());
+		if (withMatchRate == true){
+			System.out.println("Match rate : " +match + " / " + mentions.size());
+		}
 	}
 
 }
