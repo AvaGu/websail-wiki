@@ -164,13 +164,19 @@ public class CalculateCategoryFeature {
 			count ++;
 		}
 	}
+	public static void testKeys(ArrayList<ExtendedMentionDoc> mentions){
+		for (ExtendedMentionDoc md:mentions){
+			System.out.println(md.getKey());
+		}
+	}
 	public static void main(String[] args) throws Exception {
 		// TODO Auto-generated method stub
 		System.out.println("Step 1: Getting all mentions");
-		ArrayList<ExtendedMentionDoc> mentions = adapter.getMentions(false, false);// true false   and false false
+		ArrayList<ExtendedMentionDoc> mentions = adapter.getMentions(true, true);// true false   and false false
 		System.out.println("Found " + mentions.size() + " mentions\n");
 		boolean withMatchRate = false;
-		processMentions(mentions, withMatchRate);
+		testKeys(mentions);
+//		processMentions(mentions, withMatchRate);
 		
 		if (withMatchRate == true){
 			System.out.println("Match rate : " +match + " / " + mentions.size());
