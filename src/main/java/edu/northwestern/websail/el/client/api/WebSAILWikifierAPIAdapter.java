@@ -20,15 +20,12 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
-import edu.northwestern.websail.el.adapter.wikidoc.model.CandidateDoc;
 import edu.northwestern.websail.el.adapter.wikidoc.model.FeatureDoc;
 import edu.northwestern.websail.el.adapter.wikidoc.model.FeatureSetDoc;
 import edu.northwestern.websail.el.client.api.model.ExtendedMentionDoc;
 import edu.northwestern.websail.el.client.api.model.Response;
 import edu.northwestern.websail.el.models.FeatureValue;
-import edu.northwestern.websail.el.models.WikiTitle;
 import edu.northwestern.websail.wikiparser.parsers.model.WikiExtractedPage;
-import edu.northwestern.websail.wikiparser.parsers.model.element.WikiLink;
 
 public class WebSAILWikifierAPIAdapter {
 
@@ -234,230 +231,10 @@ public class WebSAILWikifierAPIAdapter {
 				.equalsIgnoreCase("{\"status\":200,\"response\":\"ok\",\"message\":\"OK\"}");
 
 	}
-	public void getLinkNumFromSourceInLinks(ArrayList<ExtendedMentionDoc> mentions) throws Exception{
-		//System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
-		WebSAILWikifierAPIAdapter adapter = new WebSAILWikifierAPIAdapter();
-		//ArrayList<String> candidateTitle = new ArrayList<String>();
-		//ArrayList<Integer> candidateId = new ArrayList<Integer>();
-		//ArrayList<String> mentionTitle = new ArrayList<String>();
-		//ArrayList<Integer> mentionId = new ArrayList<Integer>();
-		//int candidateNum = candidateTitle.size();
-		int mentionNum = mentions.size();
-		System.out.println("Total mention number: "+mentionNum);
-		int[][] candidateMap = new int [100][mentionNum];
-		int[][] output = new int[100][mentionNum];
-		
-		int mentionNo = 0;
-		
-		for (ExtendedMentionDoc e:mentions)
-		{
-			//WikiTitle wt = e.getGold();
-			
-			//String title = wt.getTitle();
-			
-			//String source = e.getArticle().getSourceName();
-			String sourceId = e.getArticle().getSourceId();
-			//int id = wt.getTitleId();
-			//mentionTitle.add(title);
-			//mentionId.add(id);
-			//System.out.println("mention tilte: " + title);
-			//System.out.println("mention id: " + id);
-			//System.out.println("source title: " + source);
-			//System.out.println("source id: " + sourceId);
-		
-			ArrayList<CandidateDoc> candidates = e.getCandidates();
-			//System.out.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
-			int candiNo=0;
-			for (CandidateDoc c:candidates)
-			{
-				//System.out.println(i);
-				//candidateTitle.add(c.getConcept().getTitle());				
-				//candidateId.add(c.getConcept().getTitleId());
-				//i++;
-				//System.out.println(c.getConcept());
-				candidateMap[candiNo][mentionNo] = c.getConcept().getTitleId();
-				/*System.out.println("candidate Map ["+ candiNo +", "+ mentionNo + "] is " +
-				candidateMap[candiNo][mentionNo]);
-				System.out.println("#######################################");	*/		
-				candiNo++;
-			}
-			ArrayList<WikiLink> internalLinks = adapter.getPage(Integer.parseInt(sourceId)).getInternalLinks();
-			//System.out.println("internal links of page: " + source + ", " + sourceId);
-			
-			int j=0;
-			while (j<internalLinks.size())
-			{
-				int linkId = internalLinks.get(j).getTarget().getId();
-				//if(linkId!=id)
-				//{
-					ArrayList<WikiLink> firstLevelLink = adapter.getPage(linkId).getInternalLinks();
-					int k1=0;
-					while (k1<firstLevelLink.size())
-					{
-							int k2 = 0;
-							while(k2<100)
-							{
-								if (firstLevelLink.get(k1).getTarget().getId()==candidateMap[k2][mentionNo])
-								{
-								output[k2][mentionNo]++;
-								//System.out.println("incrementing output ["+k2+", "+
-								//mentionNo+"]");
-								}
-								k2++;
-						     }
-							k1++;
-				
-					}
-			    //}
-			
-			    j++;
-		    }
-			System.out.println("The "+mentionNo+" mention is done!");
-		    mentionNo++;
-		}
-		/*int j1=0;
-		while(j1<mentionNum)
-		{
-			int i1=0;
-			//System.out.println("mention: "+mentionTitle.get(j1));
-			
-			while(i1<100)
-			{
-				if(candidateMap[i1][j1]!=0)
-				{
-				System.out.println("candidate id: "+candidateMap[i1][j1]);
-				System.out.println("count: " + output[i1][j1]);
-				}
-				i1++;
-			}
-			j1++;
-		}*/
-		
-		
-		//System.out.println("mention number: "+mentionNum);
-		
-		
-		
-		
-		
-		/*while(j1<mentionNum)
-		{
-			int j2=0;
-			while(j2<100)
-			{
-				if(output[j2][j1]!=0)
-				{
-				System.out.println("count of mention: " + mentionTitle.get(j1)+", candidate: " +
-			    candidateMap[j2][j1]+" is "+output[j2][j1]);
-				//fd1.setConceptId(candidateMap[j2][j1]);
-				//fd1.setFeatureValue("yuxi.testFeature1", new FeatureValue((double)(output[j2][j1])));
-				}
-				j2++;			
-			}
-			j1++;
-		}*/
-		int j = 0;
-		for (ExtendedMentionDoc e:mentions)
-		{
-			//System.out.println(j+" $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
-			//System.out.println(e.getGold());
-			//System.out.println(mentionTitle.get(j));
-			FeatureSetDoc fsd = new FeatureSetDoc();
-			fsd.setMentionKey(e.getKey());
-			System.out.println("uploading mention " +j+", key: "+e.getKey());
-			ArrayList<FeatureDoc> fds = new ArrayList<FeatureDoc>();
-			int i=0;
-			for(CandidateDoc c : e.getCandidates())
-			{
-				//System.out.println(i+ "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%");
-				//ystem.out.println(c.getConcept());
-				//System.out.println(candidateMap[i][j]);
-				double value = (double)output[i][j];
-				//System.out.println(value);
-				FeatureDoc fd = new FeatureDoc();
-				fd.setConceptId(c.getConcept().getTitleId());
-				fd.setFeatureValue("yuxi.link_state", new FeatureValue(value));
-				fds.add(fd);
-				
-				i++;
-			}
-			fsd.setFeatureDocs(fds);
-			adapter.uploadMentionFeature(fsd);
-			System.out.println("Mention + " +j +" is uploaded successfully!!");
-			j++;
-		}
-		System.out.println("All done!!!");
-	}
-	public void splitMentions(ArrayList<ExtendedMentionDoc> mentions, ArrayList<ExtendedMentionDoc> uniqueMentions, ArrayList<ExtendedMentionDoc> ambiguousMentions) throws Exception{
-		System.out.println("splitMentions start");
-		int count = 0;
-		for (ExtendedMentionDoc e:mentions){
-			count ++;
-			//System.out.println("splitMentions : " + count);
-			//WikiTitle wt = e.getGold();
-			//String title = wt.getTitle();
-			//String source = e.getArticle().getSourceName();
-			//String sourceId = e.getArticle().getSourceId();
-			
-			//int id = wt.getTitleId();
-			/*System.out.println("mention tilte: " + title);
-			System.out.println("mention id: " + id);
-			System.out.println("source title: " + source);
-			System.out.println("source id: " + sourceId);*/
-			ArrayList<CandidateDoc> candidates = e.getCandidates();
-			/*int i=0;
-			for (CandidateDoc c:candidates){
-					System.out.println(i);
-					i++;
-					System.out.println(c.getConcept());
-					
-			}*/
-			if (candidates.size() == 0){
-				System.out.println("error: No candidates found for mention :" + e.getGold().getTitle());
-			}
-			else if (candidates.size() == 1){
-				//No ambiguous ones
-				uniqueMentions.add(e);
-			}
-			else{
-				//Ambiguous ones
-				ambiguousMentions.add(e);
-	
-			}
-			
-		}//for mentions
-		System.out.println(count);
-	}
-	public void featureLinkStep() throws Exception{
-		//Get all mentions in an article
-		System.out.println("Step 1: Get all mentions");
-		ArrayList<ExtendedMentionDoc> mentions = this.getMentions(false, true);
-		System.out.println("Found " + mentions.size() + " mentions\n");
-		
-		
-		/*System.out.println("Step 2: Classifying mentions to uniqueMentions and ambiguousMentions");
-		ArrayList<ExtendedMentionDoc> uniqueMentions = new ArrayList<ExtendedMentionDoc>();
-		ArrayList<ExtendedMentionDoc> ambiguousMentions = new ArrayList<ExtendedMentionDoc>();
-		splitMentions(mentions, uniqueMentions, ambiguousMentions);
-		System.out.println("Have found " + uniqueMentions.size() + " mentions that has unique page");
-		System.out.println("Have found " + ambiguousMentions.size() + " mentions that has ambiguous page\n");*/
-		
-		System.out.println("Step 2: Get link numbers from souce page links");
-		//ArrayList<Integer> firstLevelLinkCount = new ArrayList<Integer> ();
-		//ArrayList<Integer> firstLevelLinkCount = new ArrayList<Integer> ();
-		
-		getLinkNumFromSourceInLinks(mentions);
-		
-		
-		
-	}
+
 	public static void main(String[] args) throws Exception {
 		WebSAILWikifierAPIAdapter adapter = new WebSAILWikifierAPIAdapter();
-		adapter.featureLinkStep();
-		//System.out.println(adapter.getMentions(false, false).size());
-		//System.out.println(adapter.getPage(43352).getTitle());
-		//System.out.println(adapter.getPage(43353).getTitle());
-		/*System.out.println(adapter.getMentions(true, true).get(0).getCandidates().get(0).getConcept().getTitleId());
+		System.out.println(adapter.getMentions(true, true).get(0).getGold());
 		System.out.println(adapter.getPage(6886).getInternalLinks().get(0).getSurface() + "->" +adapter.getPage(6886).getInternalLinks().get(0)
 				.getTarget().getId());
 		System.out.println(adapter.getMentionFeature("testKey", "nor")
@@ -482,7 +259,7 @@ public class WebSAILWikifierAPIAdapter {
 		
 		fsd.setFeatureDocs(fds);
 		
-		adapter.uploadMentionFeature(fsd);*/
+		adapter.uploadMentionFeature(fsd);
 		
 		// FeatureMapSet fs = new FeatureMapSet();
 		// fs.setMentionKey("testKey");
