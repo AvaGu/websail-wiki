@@ -124,7 +124,7 @@ public class CalculateCategoryFeature {
 		
 		if (withMatchRate == true){
 			if (max_index != -1){
-				int categoryBestId = categories.get(0).getConcept().getTitleId();
+				int categoryBestId = categories.get(max_index).getConcept().getTitleId();
 				int goldId = mention.getGold().getTitleId();
 				if (categoryBestId == goldId){
 					match ++;
@@ -234,7 +234,7 @@ public class CalculateCategoryFeature {
 	public static void main(String[] args) throws Exception {
 		// TODO Auto-generated method stub
 		System.out.println("Step 1: Getting all mentions");
-		ArrayList<ExtendedMentionDoc> mentions = adapter.getMentions(true, false);// true false   and false false
+		ArrayList<ExtendedMentionDoc> mentions = adapter.getMentions(true, true);// true false   and false false
 		System.out.println("Found " + mentions.size() + " mentions\n");
 		boolean withMatchRate = true;
 //		testKeys(mentions);

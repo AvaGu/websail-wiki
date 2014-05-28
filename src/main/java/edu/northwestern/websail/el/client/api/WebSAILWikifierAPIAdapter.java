@@ -31,7 +31,8 @@ public class WebSAILWikifierAPIAdapter {
 
 	public static final Logger logger = Logger
 			.getLogger(WebSAILWikifierAPIAdapter.class.getName());
-	private static final String serviceRoot = "http://spidey.cs.northwestern.edu:8080/wikifier";
+//	private static final String serviceRoot = "http://spidey.cs.northwestern.edu:8080/wikifier";
+	private static final String serviceRoot = "http://websail-fe.cs.northwestern.edu:8080/wikifier";
 
 	public WebSAILWikifierAPIAdapter() {
 
