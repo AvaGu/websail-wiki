@@ -19,6 +19,11 @@ import edu.northwestern.websail.wikiparser.parsers.model.element.WikiLink;
 
 public class CalculateCategoryFeature {
 	public static WebSAILWikifierAPIAdapter adapter = new WebSAILWikifierAPIAdapter();
+	public static final int FINDBEST_UPLOADSUCESS = 0;
+	public static final int FINDBEST_UPLOADFAILED = 1;
+	public static final int NOBEST_UPLOADSUCESS = 2;
+	public static final int NOBEST_UPLOADFAILED = 3;
+	public static final String featurename = "ava.category";
 	private static int match = 0;
 	public static boolean uploadUniqueMention(ExtendedMentionDoc mention) throws Exception{
 		ArrayList<CandidateDoc> candidates = mention.getCandidates();
@@ -33,7 +38,9 @@ public class CalculateCategoryFeature {
 		ArrayList<FeatureDoc> fds = new ArrayList<FeatureDoc>();
 		FeatureDoc fd1 = new FeatureDoc();
 		fd1.setConceptId(candidates.get(0).getConcept().getTitleId());
-		fd1.setFeatureValue("ava.category", new FeatureValue(1.0));
+		
+		fd1.setFeatureValue(featurename, new FeatureValue(1.0));
+		
 		fds.add(fd1);
 		fsd.setFeatureDocs(fds);
 		
@@ -46,7 +53,7 @@ public class CalculateCategoryFeature {
 		
 		
 	}
-	public static void learnCategory(ExtendedMentionDoc mention, Set<String> knowledge) throws IOException{
+	public static void learnCategoryInternalLinks(ExtendedMentionDoc mention, Set<String> knowledge) throws IOException{
 		int sourceId = Integer.parseInt(mention.getArticle().getSourceId());
 		WikiExtractedPage wkpage = adapter.getPage(sourceId);
 		ArrayList<WikiLink> internalLinks = wkpage.getInternalLinks();
@@ -64,7 +71,17 @@ public class CalculateCategoryFeature {
 		}
 		
 	}
-	public static boolean calculateCategory(ExtendedMentionDoc mention, Set<String> knowledge, boolean withMatchRate) throws Exception{
+	public static void learnCategoryOnlyOriginalPage(ExtendedMentionDoc mention, Set<String> knowledge) throws IOException{
+		int sourceId = Integer.parseInt(mention.getArticle().getSourceId());
+		WikiExtractedPage wkpage = adapter.getPage(sourceId);
+		ArrayList<WikiLink> categories = wkpage.getCategoryLinks();
+		for (WikiLink wl:categories){
+				String category = wl.getSurface();
+				knowledge.add(category);
+		}
+		
+	}
+	public static int calculateCategory(ExtendedMentionDoc mention, Set<String> knowledge, boolean withMatchRate) throws Exception{
 		ArrayList<CandidateDoc> categories = mention.getCandidates();
 		FeatureSetDoc fsd = new FeatureSetDoc();
 		fsd.setMentionKey(mention.getKey());
@@ -95,7 +112,7 @@ public class CalculateCategoryFeature {
 			}
 			FeatureDoc fd = new FeatureDoc();
 			fd.setConceptId(cd.getConcept().getTitleId());
-			fd.setFeatureValue("ava.category", new FeatureValue(value));
+			fd.setFeatureValue(featurename, new FeatureValue(value));
 			fds.add(fd);
 			
 			if (value > max){
@@ -116,23 +133,68 @@ public class CalculateCategoryFeature {
 		}
 		
 		fsd.setFeatureDocs(fds);
+		boolean uploadResult = true;
+		
 		try{
-			return adapter.uploadMentionFeature(fsd);
+			uploadResult = adapter.uploadMentionFeature(fsd);
 		}
 		catch(Exception e){
-			return false;
+			uploadResult = false;
+		}
+	
+		System.out.println(uploadResult);
+		if (max_index == -1){
+			//no best
+			if (uploadResult == true){
+				return CalculateCategoryFeature.NOBEST_UPLOADSUCESS;
+			}
+			else{
+				return CalculateCategoryFeature.NOBEST_UPLOADFAILED;
+			}
+		}
+		else{
+			//has best
+			if (uploadResult == true){
+				return CalculateCategoryFeature.FINDBEST_UPLOADSUCESS;
+			}
+			else{
+				return CalculateCategoryFeature.FINDBEST_UPLOADFAILED;
+			}
 		}
 	}
 	public static void processMention(ExtendedMentionDoc mention, boolean withMatchRate) throws Exception{
-		Set<String> knowledge = new HashSet<String>();
-		learnCategory(mention, knowledge);
-		boolean result = calculateCategory(mention, knowledge, withMatchRate);
-		if (result == true){
-			System.out.println("Upload ambiguous mention successful");
-		}
-		else{
-			System.out.println("Error: upload ambiguous mention failed");
-		}
+		Set<String> knowledgeInternalLinks = new HashSet<String>();
+		Set<String> knowledgeOnlyPages = new HashSet<String>();
+		Set<String> wholeKnowledge = new HashSet<String>();
+		
+//		learnCategoryOnlyOriginalPage(mention, wholeKnowledge);
+//		learnCategoryInternalLinks(mention, wholeKnowledge);
+//		int firstResult = calculateCategory(mention, wholeKnowledge, withMatchRate);
+		
+//		learnCategoryOnlyOriginalPage(mention, knowledgeOnlyPages);
+		
+		learnCategoryInternalLinks(mention, knowledgeInternalLinks);
+		int firstResult = calculateCategory(mention, knowledgeInternalLinks, withMatchRate);
+//		int firstResult = calculateCategory(mention, knowledgeOnlyPages, withMatchRate);
+//		if (firstResult == CalculateCategoryFeature.FINDBEST_UPLOADSUCESS){
+//			System.out.println("Upload ambiguous mention successful");
+//		}
+//		else if (firstResult == CalculateCategoryFeature.FINDBEST_UPLOADFAILED){
+//			System.out.println("Error: upload ambiguous mention failed");
+//		}
+//		else{
+//			learnCategoryInternalLinks(mention, knowledgeInternalLinks);
+//			System.out.println("Reprocess mention with larger knowledge");
+//			int secondResult = calculateCategory(mention, knowledgeInternalLinks, withMatchRate);
+//			if (secondResult == CalculateCategoryFeature.FINDBEST_UPLOADSUCESS || secondResult == CalculateCategoryFeature.NOBEST_UPLOADSUCESS){
+//				System.out.println("Upload ambiguous mention successful");
+//			}
+//			else{
+//				System.out.println("Error: upload ambiguous mention failed");
+//			}
+//			
+//		}
+		
 	}
 	
 	
@@ -172,9 +234,9 @@ public class CalculateCategoryFeature {
 	public static void main(String[] args) throws Exception {
 		// TODO Auto-generated method stub
 		System.out.println("Step 1: Getting all mentions");
-		ArrayList<ExtendedMentionDoc> mentions = adapter.getMentions(false, false);// true false   and false false
+		ArrayList<ExtendedMentionDoc> mentions = adapter.getMentions(true, false);// true false   and false false
 		System.out.println("Found " + mentions.size() + " mentions\n");
-		boolean withMatchRate = false;
+		boolean withMatchRate = true;
 //		testKeys(mentions);
 		processMentions(mentions, withMatchRate);
 		
