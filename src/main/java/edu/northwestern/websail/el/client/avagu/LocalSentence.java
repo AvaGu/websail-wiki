@@ -65,11 +65,11 @@ public class LocalSentence {
 		String plaintext = page.getPlainText();
 		int startOffset =mention.getStartOffset();
 		int endOffset = mention.getEndOffset();
-		System.out.println("StartOffset : " + startOffset + "  EndOffset : " + endOffset);
+//		System.out.println("StartOffset : " + startOffset + "  EndOffset : " + endOffset);
 		
 		int localStart = 0;
 		int localEnd = 0;
-		boolean firstTime = true;
+		boolean firstTime = false;
 		int i;
 		for (i = startOffset; i >=0 ; i --){
 			if (plaintext.charAt(i) == '.'){
@@ -86,7 +86,7 @@ public class LocalSentence {
 		if (i == -1){
 			localStart = 0;
 		}
-		firstTime = true;
+		firstTime = false;
 		for (i = endOffset; i < plaintext.length(); i ++){
 			if (plaintext.charAt(i) == '.'){
 				if (firstTime == true){
@@ -102,7 +102,7 @@ public class LocalSentence {
 		if (i == plaintext.length()){
 			localEnd = plaintext.length();
 		}
-		System.out.println("localStart : " + localStart + "  localEnd : " + localEnd);
+//		System.out.println("localStart : " + localStart + "  localEnd : " + localEnd);
 		localSentence = plaintext.substring(localStart, localEnd);
 		
 		return localSentence;
@@ -117,6 +117,12 @@ public class LocalSentence {
 		skips.add("?");
 		skips.add("!");
 		skips.add(";");
+		skips.add("who");
+		skips.add("where");
+		skips.add("what");
+		skips.add("when");
+		skips.add("while");
+		skips.add("how");
 		tokenizer.setStopwords(cas);
 	
 		tokenizer.initialize(content);
@@ -172,6 +178,7 @@ public class LocalSentence {
 					}
 				}//for
 				down = downleft * downright;
+				down = Math.sqrt(down);
 				if (down !=0){
 					value = up / down;
 				}
@@ -197,6 +204,30 @@ public class LocalSentence {
 				if (categoryBestId == goldId){
 					match ++;
 				}
+				else{
+					System.out.println("Wrong case : \n");
+					System.out.println("Local map:");
+					System.out.println(localMap);
+					System.out.println();
+					System.out.println("Gold: " + mention.getGold().getTitle());
+					WikiExtractedPage tmpPage = adapter.getPage(mention.getGold().getTitleId());
+					String section = tmpPage.getPlainText().substring(0, tmpPage.getSections().get(0).getOffset());
+					HashMap<String, Integer> sectionMap = tokenizeParagraph(section);
+					System.out.println("Section map:");
+					System.out.println(sectionMap);
+					
+					System.out.println();
+					System.out.println("Pick up : " + categories.get(max_index).getConcept().getTitle());
+					tmpPage = adapter.getPage(categories.get(max_index).getConcept().getTitleId());
+					System.out.println("Section map:");
+					section = tmpPage.getPlainText().substring(0, tmpPage.getSections().get(0).getOffset());
+					sectionMap = tokenizeParagraph(section);
+					System.out.println(sectionMap);
+					
+				}
+				System.out.println("---------------------------------------------------");
+				System.out.println("Matched : " + match);
+				System.out.println("---------------------------------------------------");
 			}
 		}
 		
