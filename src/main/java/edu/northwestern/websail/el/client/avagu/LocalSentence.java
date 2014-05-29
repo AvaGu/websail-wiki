@@ -69,7 +69,7 @@ public class LocalSentence {
 		
 		int localStart = 0;
 		int localEnd = 0;
-		boolean firstTime = false;
+		boolean firstTime = true;
 		int i;
 		for (i = startOffset; i >=0 ; i --){
 			if (plaintext.charAt(i) == '.'){
@@ -86,7 +86,7 @@ public class LocalSentence {
 		if (i == -1){
 			localStart = 0;
 		}
-		firstTime = false;
+		firstTime = true;
 		for (i = endOffset; i < plaintext.length(); i ++){
 			if (plaintext.charAt(i) == '.'){
 				if (firstTime == true){
