@@ -190,12 +190,14 @@ public class LocalSentence {
 				for (String key : localMap.keySet()) {
 					if (sectionMap.containsKey(key)){
 						up += localMap.get(key) * sectionMap.get(key);
-						downleft += localMap.get(key) * localMap.get(key);
-						downright += sectionMap.get(key) * sectionMap.get(key);
 					}
+					downleft += localMap.get(key) * localMap.get(key);
 				}//for
-				down = downleft * downright;
-				down = Math.sqrt(down);
+				for (String key : sectionMap.keySet()) {
+						downright += sectionMap.get(key) * sectionMap.get(key);
+				}//for
+				down = Math.sqrt(downleft) * Math.sqrt(downright);
+//				down = Math.sqrt(down);
 				if (down !=0){
 					value = up / down;
 				}
@@ -222,24 +224,24 @@ public class LocalSentence {
 					match ++;
 				}
 				else{
-					System.out.println("Wrong case : \n");
-					System.out.println("Local map:");
-					System.out.println(localMap);
-					System.out.println();
-					System.out.println("Gold: " + mention.getGold().getTitle());
-					WikiExtractedPage tmpPage = adapter.getPage(mention.getGold().getTitleId());
-					String section = tmpPage.getPlainText().substring(0, tmpPage.getSections().get(0).getOffset());
-					HashMap<String, Integer> sectionMap = tokenizeParagraph(section);
-					System.out.println("Section map:");
-					System.out.println(sectionMap);
-					
-					System.out.println();
-					System.out.println("Pick up : " + categories.get(max_index).getConcept().getTitle());
-					tmpPage = adapter.getPage(categories.get(max_index).getConcept().getTitleId());
-					System.out.println("Section map:");
-					section = tmpPage.getPlainText().substring(0, tmpPage.getSections().get(0).getOffset());
-					sectionMap = tokenizeParagraph(section);
-					System.out.println(sectionMap);
+//					System.out.println("Wrong case : \n");
+//					System.out.println("Local map:");
+//					System.out.println(localMap);
+//					System.out.println();
+//					System.out.println("Gold: " + mention.getGold().getTitle());
+//					WikiExtractedPage tmpPage = adapter.getPage(mention.getGold().getTitleId());
+//					String section = tmpPage.getPlainText().substring(0, tmpPage.getSections().get(0).getOffset());
+//					HashMap<String, Integer> sectionMap = tokenizeParagraph(section);
+//					System.out.println("Section map:");
+//					System.out.println(sectionMap);
+//					
+//					System.out.println();
+//					System.out.println("Pick up : " + categories.get(max_index).getConcept().getTitle());
+//					tmpPage = adapter.getPage(categories.get(max_index).getConcept().getTitleId());
+//					System.out.println("Section map:");
+//					section = tmpPage.getPlainText().substring(0, tmpPage.getSections().get(0).getOffset());
+//					sectionMap = tokenizeParagraph(section);
+//					System.out.println(sectionMap);
 					
 				}
 				System.out.println("---------------------------------------------------");
@@ -318,8 +320,8 @@ public class LocalSentence {
 	}
 
 	public static void main(String[] args) throws Exception{
-		int caseNo = 0;
-//		int caseNo = 1;
+//		int caseNo = 0;
+		int caseNo = 1;
 //		int caseNo = 2;
 		
 		// TODO Auto-generated method stub
