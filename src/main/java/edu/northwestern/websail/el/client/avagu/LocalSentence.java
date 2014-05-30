@@ -11,6 +11,7 @@ import java.util.Set;
 
 import org.apache.lucene.analysis.core.StopAnalyzer;
 import org.apache.lucene.analysis.util.CharArraySet;
+import org.apache.lucene.util.Version;
 
 import edu.northwestern.websail.el.adapter.wikidoc.model.CandidateDoc;
 import edu.northwestern.websail.el.adapter.wikidoc.model.FeatureDoc;
@@ -31,6 +32,36 @@ public class LocalSentence {
 	private static int match = 0;
 	private static int caredMentions = 0;
 	public static final String featurename = "ava.localsentence";
+	
+	private static StanfordNLPTokenizer tokenizer = new StanfordNLPTokenizer();
+	
+	static {
+		
+		CharArraySet cas = StopAnalyzer.ENGLISH_STOP_WORDS_SET;
+		CharArraySet skips = new CharArraySet(Version.LUCENE_40,0,true);
+		skips.add(",");
+		skips.add(".");
+		skips.add("?");
+		skips.add("!");
+		skips.add(";");
+		skips.add("who");
+		skips.add("where");
+		skips.add("what");
+		skips.add("when");
+		skips.add("while");
+		skips.add("how");
+		skips.add("-lrb-");
+		skips.add("-rrb-");
+		skips.add("-lcb-");
+		skips.add("-rcb-");
+		skips.add("-lsb-");
+		skips.add("-rsb-");
+		skips.addAll(cas);
+//		cas.addAll(skips);
+		tokenizer.setToLower(true);
+		tokenizer.setStopwords(skips);
+	}
+	
 	public static boolean uploadUniqueMention(ExtendedMentionDoc mention) throws Exception{
 		ArrayList<CandidateDoc> candidates = mention.getCandidates();
 		int numCand = candidates.size();
@@ -109,29 +140,15 @@ public class LocalSentence {
 	}
 	public static HashMap<String,Integer> tokenizeParagraph(String content) throws IOException{
 		HashMap<String, Integer> map = new HashMap<String, Integer>();
-		StanfordNLPTokenizer tokenizer = new StanfordNLPTokenizer();
-		CharArraySet cas = StopAnalyzer.ENGLISH_STOP_WORDS_SET;
-		HashSet<String> skips = new HashSet<String>();
-		skips.add(",");
-		skips.add(".");
-		skips.add("?");
-		skips.add("!");
-		skips.add(";");
-		skips.add("who");
-		skips.add("where");
-		skips.add("what");
-		skips.add("when");
-		skips.add("while");
-		skips.add("how");
-		tokenizer.setStopwords(cas);
+		
 	
 		tokenizer.initialize(content);
 		for(Token t : tokenizer.getAllTokens()){
 			String word = t.getText().trim();
-			if (skips.contains(word)){
-				continue;
-			}
-			else{
+//			if (skips.contains(word)){
+//				continue;
+//			}
+//			else{
 				if (map.containsKey(word)){
 					int newvalue = map.get(word) + 1;
 					map.put(word, newvalue);
@@ -139,7 +156,7 @@ public class LocalSentence {
 				else{
 					map.put(word, 1);
 				}
-			}
+//			}
 		}
 		return map;
 
@@ -266,7 +283,6 @@ public class LocalSentence {
 		String localSentence = getLocalSentence(mention);
 		HashMap<String, Integer> localSentenceMap =tokenizeParagraph(localSentence);
 		calculateLocalSentence(mention, localSentenceMap, withMatchRate);
-		
 		
 		System.out.println(localSentenceMap);
 	}
