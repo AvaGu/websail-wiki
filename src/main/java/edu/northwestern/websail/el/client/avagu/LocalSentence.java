@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -29,7 +30,12 @@ import edu.northwestern.websail.wikiparser.parsers.model.element.WikiSection;
 
 public class LocalSentence {
 	public static WebSAILWikifierAPIAdapter adapter = new WebSAILWikifierAPIAdapter();
-	private static int match = 0;
+	private static int ambiguousMentions= 0;
+	private static int uniqueMentions = 0;
+	private static int nocandiMentions = 0;
+	private static int uniqueMentionMatch = 0;
+	private static int ambiguousMentionMatch = 0;
+	
 	private static int caredMentions = 0;
 	public static final String featurename = "ava.localsentence";
 
@@ -39,23 +45,267 @@ public class LocalSentence {
 
 		CharArraySet cas = StopAnalyzer.ENGLISH_STOP_WORDS_SET;
 		CharArraySet skips = new CharArraySet(Version.LUCENE_40, 0, true);
-		skips.add(",");
-		skips.add(".");
-		skips.add("?");
-		skips.add("!");
-		skips.add(";");
-		skips.add("who");
-		skips.add("where");
-		skips.add("what");
-		skips.add("when");
-		skips.add("while");
-		skips.add("how");
-		skips.add("-lrb-");
-		skips.add("-rrb-");
-		skips.add("-lcb-");
-		skips.add("-rcb-");
-		skips.add("-lsb-");
-		skips.add("-rsb-");
+		ArrayList<String> prepositions = new ArrayList<String>(Arrays.asList("a",
+																			"abaft",
+																			"aboard",
+																			"absent",
+																			"across",
+																			"afore",
+																			"after",
+																			"against",
+																			"along",
+																			"alongside",
+																			"amid",
+																			"amidst",
+																			"among",
+																			"amongst",
+																			"an",
+																			"anenst",
+																			"apropos",
+																			"apud",
+																			"around",
+																			"as",
+																			"aside",
+																			"astride",
+																			"at",
+																			"athwart",
+																			"atop",
+																			"barring",
+																			"before",
+																			"beneath",
+																			"beside",
+																			"besides",
+																			"between",
+																			"beyond",
+																			"but",
+																			"by",
+																			"circa",
+																			"concerning",
+																			"despite",
+																			"down",
+																			"during",
+																			"except",
+																			"excluding",
+																			"failing",
+																			"following",
+																			"for",
+																			"forenenst",
+																			"from",
+																			"given",
+																			"in",
+																			"including",
+																			"inside",
+																			"into",
+																			"like",
+																			"mid",
+																			"midst",
+																			"minus",
+																			"modulo",
+																			"near",
+																			"next",
+																			"notwithstanding",
+																			"o'",
+																			"of",
+																			"off",
+																			"on",
+																			"onto",
+																			"opposite",
+																			"out",
+																			"outside",
+																			"over",
+																			"pace",
+																			"past",
+																			"per",
+																			"plus",
+																			"pro",
+																			"qua",
+																			"regarding",
+																			"round",
+																			"sans",
+																			"since",
+																			"than",
+																			"through",
+																			"throughout",
+																			"till",
+																			"times",
+																			"to",
+																			"toward",
+																			"towards",
+																			"under",
+																			"underneath",
+																			"unlike",
+																			"until",
+																			"unto",
+																			"up",
+																			"upon",
+																			"versus",
+																			"vs",
+																			"via",
+																			"with",
+																			"without",
+																			"worth"
+				));
+		ArrayList<String> conjunctions =new ArrayList<String>(Arrays.asList("after",
+																			"although",
+																			"as",
+																			"because",
+																			"before",
+																			"if",
+																			"lest",
+																			"once",
+																			"since",
+																			"than",
+																			"that",
+																			"though",
+																			"till",
+																			"unless",
+																			"until",
+																			"when",
+																			"whenever",
+																			"where",
+																			"wherever",
+																			"while"
+				));
+		ArrayList<String> pronouns =new ArrayList<String>(Arrays.asList("I",
+																		"me",
+																		"you",
+																		"she",
+																		"her",
+																		"he",
+																		"him",
+																		"it",
+																		"they",
+																		"them",
+																		"that",
+																		"which",
+																		"who",
+																		"whom",
+																		"whose",
+																		"whichever",
+																		"whoever",
+																		"whomever",
+																		"this",
+																		"these",
+																		"that",
+																		"those",
+																		"anybody",
+																		"anyone",
+																		"anything",
+																		"each",
+																		"either",
+																		"everybody",
+																		"everyone",
+																		"everything",
+																		"neither",
+																		"nobody",
+																		"nothing",
+																		"somebody",
+																		"someone",
+																		"something",
+																		"both",
+																		"few",
+																		"many",
+																		"several",
+																		"all",
+																		"any",
+																		"most",
+																		"none",
+																		"some",
+																		"myself",
+																		"ourselves",
+																		"yourself",
+																		"yourselves",
+																		"himeself",
+																		"herself",
+																		"itset",
+																		"themselves",
+																		"my",
+																		"your",
+																		"his",
+																		"her",
+																		"its",
+																		"our",
+																		"their",
+																		"mine",
+																		"yours",
+																		"hers",
+																		"ours",
+																		"yours",
+																		"theirs"
+																		
+				));
+		
+		ArrayList<String> skiplist = new ArrayList<String>(
+			    Arrays.asList(",",
+			    			".", 
+			    			"?",
+			    			"!",
+			    			";",
+			    			"who",
+			    			"where",
+			    			"what",
+			    			"when",
+			    			"while",
+			    			"how",
+			    			"which",
+			    			"-lrb-",
+			    			"-rrb-",
+			    			"-lcb-",
+			    			"-rcb-",
+			    			"-lsb-",
+			    			"-rsb-",
+			    			"--",
+			    			"my",
+			    			"mine",
+			    			"me",
+			    			"I",
+			    			"you",
+			    			"your",
+			    			"yours",
+			    			"him",
+			    			"his",
+			    			"he",
+			    			"she",
+			    			"her",
+			    			"hers",
+			    			"it",
+			    			"its",
+			    			"they",
+			    			"them",
+			    			"their",
+			    			"theirs",
+			    			"it's",
+			    			"``",
+			    			"from",
+			    			"to",
+			    			"also",
+			    			"and",
+			    			"before",
+			    			"after",
+			    			"in",
+			    			"on",
+			    			"by",
+			    			"more",
+			    			"less",
+			    			"often",
+			    			"other",
+			    			"many",
+			    			"much",
+			    			"because",
+			    			"so",
+			    			"therefore",
+			    			"however",
+			    			"''",
+			    			"'",
+			    			"should",
+			    			"must",
+			    			"can"
+			    			)
+			    			);
+		skips.addAll(conjunctions);
+		skips.addAll(pronouns);
+		skips.addAll(prepositions);
+		skips.addAll(skiplist);
 		skips.addAll(cas);
 		// cas.addAll(skips);
 		tokenizer.setToLower(true);
@@ -68,6 +318,10 @@ public class LocalSentence {
 		int numCand = candidates.size();
 		if (numCand != 1) {
 			return false;
+		}
+		
+		if (candidates.get(0).getConcept().getTitleId() == mention.getGold().getTitleId()){
+			uniqueMentionMatch ++;
 		}
 
 		FeatureSetDoc fsd = new FeatureSetDoc();
@@ -97,14 +351,15 @@ public class LocalSentence {
 		String plaintext = page.getPlainText();
 		int startOffset = mention.getStartOffset();
 		int endOffset = mention.getEndOffset();
-		// System.out.println("StartOffset : " + startOffset + "  EndOffset : "
-		// + endOffset);
 
 		int localStart = 0;
 		int localEnd = 0;
 		boolean firstTime = true;
 		int i;
 		for (i = startOffset; i >= 0; i--) {
+			if (plaintext.charAt(i) == '\n'){
+				localStart = i + 1;
+			}
 			if (plaintext.charAt(i) == '.') {
 				if (firstTime == true) {
 					firstTime = false;
@@ -114,12 +369,16 @@ public class LocalSentence {
 					break;
 				}
 			}
+			
 		}
 		if (i == -1) {
 			localStart = 0;
 		}
 		firstTime = true;
 		for (i = endOffset; i < plaintext.length(); i++) {
+			if (plaintext.charAt(i) == '\n'){
+				localEnd = i;
+			}
 			if (plaintext.charAt(i) == '.') {
 				if (firstTime == true) {
 					firstTime = false;
@@ -133,8 +392,6 @@ public class LocalSentence {
 		if (i == plaintext.length()) {
 			localEnd = plaintext.length();
 		}
-		// System.out.println("localStart : " + localStart + "  localEnd : " +
-		// localEnd);
 		localSentence = plaintext.substring(localStart, localEnd);
 
 		return localSentence;
@@ -209,7 +466,12 @@ public class LocalSentence {
 			value = up;
 			boolean correct = cd.getConcept().getTitleId() == mention.getGold()
 					.getTitleId();
-			System.out.println("Value: " + value + ", " + correct + "("+cd.getConcept() + " vs " + mention.getGold()+")");
+			String mark = "";
+			if (correct == true){
+				mark = "Golden";
+			}
+//			System.out.println("Value: " + value + ", " + mark + "("+cd.getConcept() + " vs " + mention.getGold()+")");
+			System.out.println("Value: " + value + ", " + mark + "("+cd.getConcept() + ")");
 
 			FeatureDoc fd = new FeatureDoc();
 			fd.setConceptId(cd.getConcept().getTitleId());
@@ -229,14 +491,17 @@ public class LocalSentence {
 						.getTitleId();
 				int goldId = mention.getGold().getTitleId();
 				if (categoryBestId == goldId) {
-					match++;
-					System.out.println("Right Value:  " + max + ".");
+					ambiguousMentionMatch++;
+					System.out.println("Right case");
+//					System.out.println("Right Value:  " + max + ".");
 				} else {
-					System.out.println("Wrong case : \n");
-					System.out.println("Local map:");
+					
+					System.out.println("\nWrong case Error analysis:");
+					System.out.println("Mention (" + mention.getSurface() + ") Local sentences map:");
 					System.out.println(localMap);
 					System.out.println();
 					System.out.println("Gold: " + mention.getGold().getTitle());
+					
 //					WikiExtractedPage tmpPage = adapter.getPage(mention
 //							.getGold().getTitleId());
 //					String section = tmpPage.getPlainText().substring(0,
@@ -245,7 +510,6 @@ public class LocalSentence {
 //					System.out.println("Section map:");
 //					System.out.println(sectionMap);
 
-					System.out.println();
 					System.out.println("Pick up : "+ categories.get(max_index).getConcept().getTitle());
 //					tmpPage = adapter.getPage(categories.get(max_index)
 //							.getConcept().getTitleId());
@@ -254,14 +518,14 @@ public class LocalSentence {
 //							tmpPage.getSections().get(0).getOffset());
 //					sectionMap = tokenizeParagraph(section);
 //					System.out.println(sectionMap);
-					System.out.println("Wrong value:" + max + ".");
+					System.out.println("Wrong candidate value:" + max + ".");
 
 				}
-				System.out
-						.println("---------------------------------------------------");
-				System.out.println("Matched : " + match);
-				System.out
-						.println("---------------------------------------------------");
+//				System.out
+//						.println("---------------------------------------------------");
+//				System.out.println("Matched : " + match);
+//				System.out
+//						.println("---------------------------------------------------");
 			}
 		}
 
@@ -301,24 +565,30 @@ public class LocalSentence {
 		HashMap<String, Integer> localSentenceMap = tokenizeParagraph(localSentence);
 		calculateLocalSentence(mention, localSentenceMap, withMatchRate);
 
-		System.out.println(localSentenceMap);
 	}
 
 	public static void processMentions(ArrayList<ExtendedMentionDoc> mentions,
 			boolean withMatchRate) throws Exception {
-		match = 0;
-		caredMentions = 0;
+		ambiguousMentionMatch = 0;
+		uniqueMentionMatch = 0;
+		
+		ambiguousMentions = 0;
+		uniqueMentions = 0;
+		nocandiMentions = 0;
+		
 		int mentionNum = mentions.size();
 		int count = 1;
 
 		for (ExtendedMentionDoc md : mentions) {
-			System.out.println("Process " + count + " / " + mentionNum + " : "
-					+ md.getSurface() + " : " + md.getKey());
+			System.out.println("\n-----------------  Process " + count + " / " + mentionNum + " : "
+					+ md.getSurface() + " : " + md.getKey() + " -------------------");
 			ArrayList<CandidateDoc> candidates = md.getCandidates();
 			int numCand = candidates.size();
 			if (numCand == 0) {
+				nocandiMentions ++;
 				System.out.println("Error: no candidates found");
 			} else if (numCand == 1) {
+				uniqueMentions ++;
 				boolean result = uploadUniqueMention(md);
 				if (result == true) {
 					System.out.println("Upload unique mention successful");
@@ -326,17 +596,17 @@ public class LocalSentence {
 					System.out.println("Error: upload unique mention failed");
 				}
 			} else {
-				caredMentions++;
+				ambiguousMentions ++;
 				processMention(md, withMatchRate);
 			}
-			System.out.println("");
+			System.out.println("-------------------------------------------------------");
 			count++;
 		}
 	}
 
 	public static void main(String[] args) throws Exception {
-		int caseNo = 0;
-//		 int caseNo = 1;
+//		int caseNo = 0;
+		 int caseNo = 1;
 		// int caseNo = 2;
 
 		// TODO Auto-generated method stub
@@ -365,10 +635,22 @@ public class LocalSentence {
 		processMentions(mentions, withMatchRate);
 
 		if (withMatchRate == true) {
-			System.out.println("Match rate : " + match + " / " + caredMentions);
+			System.out.println("\n\nOverview :");
+			System.out.println("Unique Candidate Mentions Accuracy :");
+			System.out.println(uniqueMentionMatch + " / " + uniqueMentions);
+			System.out.println("Ambiguous Mentions Accuracy :");
+			System.out.println(ambiguousMentionMatch + " / " + ambiguousMentions);
+			System.out.println("No candidates mentions :");
+			System.out.println(nocandiMentions);
+			
+			
+			System.out.println("\n\n Overall accuracy");
+			System.out.println((uniqueMentionMatch + ambiguousMentionMatch) + " / " + mentions.size());
+			
+			
 		}
 
-		System.out.println("Program start @");
+		System.out.println("\nProgram start @");
 		System.out.println(dateFormat.format(startdate));
 		Date date = new Date();
 		System.out.println("Program end@");
