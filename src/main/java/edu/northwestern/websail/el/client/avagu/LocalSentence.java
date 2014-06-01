@@ -32,13 +32,13 @@ public class LocalSentence {
 	private static int match = 0;
 	private static int caredMentions = 0;
 	public static final String featurename = "ava.localsentence";
-	
+
 	private static StanfordNLPTokenizer tokenizer = new StanfordNLPTokenizer();
-	
+
 	static {
-		
+
 		CharArraySet cas = StopAnalyzer.ENGLISH_STOP_WORDS_SET;
-		CharArraySet skips = new CharArraySet(Version.LUCENE_40,0,true);
+		CharArraySet skips = new CharArraySet(Version.LUCENE_40, 0, true);
 		skips.add(",");
 		skips.add(".");
 		skips.add("?");
@@ -57,111 +57,115 @@ public class LocalSentence {
 		skips.add("-lsb-");
 		skips.add("-rsb-");
 		skips.addAll(cas);
-//		cas.addAll(skips);
+		// cas.addAll(skips);
 		tokenizer.setToLower(true);
 		tokenizer.setStopwords(skips);
 	}
-	
-	public static boolean uploadUniqueMention(ExtendedMentionDoc mention) throws Exception{
+
+	public static boolean uploadUniqueMention(ExtendedMentionDoc mention)
+			throws Exception {
 		ArrayList<CandidateDoc> candidates = mention.getCandidates();
 		int numCand = candidates.size();
-		if (numCand != 1){
+		if (numCand != 1) {
 			return false;
 		}
-		
-		
+
 		FeatureSetDoc fsd = new FeatureSetDoc();
 		fsd.setMentionKey(mention.getKey());
 		ArrayList<FeatureDoc> fds = new ArrayList<FeatureDoc>();
 		FeatureDoc fd1 = new FeatureDoc();
 		fd1.setConceptId(candidates.get(0).getConcept().getTitleId());
-		
+
 		fd1.setFeatureValue(featurename, new FeatureValue(1.0));
-		
+
 		fds.add(fd1);
 		fsd.setFeatureDocs(fds);
-		
-		try{
+
+		try {
 			return adapter.uploadMentionFeature(fsd);
-		}
-		catch(Exception e){
+		} catch (Exception e) {
 			return false;
 		}
-		
-		
+
 	}
-	public static String getLocalSentence(ExtendedMentionDoc mention) throws Exception{
-		WikiExtractedPage page = adapter.getPage(Integer.parseInt(mention.getArticle().getSourceId()));
+
+	public static String getLocalSentence(ExtendedMentionDoc mention)
+			throws Exception {
+		WikiExtractedPage page = adapter.getPage(Integer.parseInt(mention
+				.getArticle().getSourceId()));
 		String localSentence;
 		String plaintext = page.getPlainText();
-		int startOffset =mention.getStartOffset();
+		int startOffset = mention.getStartOffset();
 		int endOffset = mention.getEndOffset();
-//		System.out.println("StartOffset : " + startOffset + "  EndOffset : " + endOffset);
-		
+		// System.out.println("StartOffset : " + startOffset + "  EndOffset : "
+		// + endOffset);
+
 		int localStart = 0;
 		int localEnd = 0;
 		boolean firstTime = true;
 		int i;
-		for (i = startOffset; i >=0 ; i --){
-			if (plaintext.charAt(i) == '.'){
-				if (firstTime == true){
+		for (i = startOffset; i >= 0; i--) {
+			if (plaintext.charAt(i) == '.') {
+				if (firstTime == true) {
 					firstTime = false;
 					continue;
-				}
-				else{
+				} else {
 					localStart = i + 1;
 					break;
 				}
 			}
 		}
-		if (i == -1){
+		if (i == -1) {
 			localStart = 0;
 		}
 		firstTime = true;
-		for (i = endOffset; i < plaintext.length(); i ++){
-			if (plaintext.charAt(i) == '.'){
-				if (firstTime == true){
+		for (i = endOffset; i < plaintext.length(); i++) {
+			if (plaintext.charAt(i) == '.') {
+				if (firstTime == true) {
 					firstTime = false;
 					continue;
-				}
-				else{
+				} else {
 					localEnd = i;
 					break;
 				}
 			}
 		}
-		if (i == plaintext.length()){
+		if (i == plaintext.length()) {
 			localEnd = plaintext.length();
 		}
-//		System.out.println("localStart : " + localStart + "  localEnd : " + localEnd);
+		// System.out.println("localStart : " + localStart + "  localEnd : " +
+		// localEnd);
 		localSentence = plaintext.substring(localStart, localEnd);
-		
+
 		return localSentence;
 	}
-	public static HashMap<String,Integer> tokenizeParagraph(String content) throws IOException{
+
+	public static HashMap<String, Integer> tokenizeParagraph(String content)
+			throws IOException {
 		HashMap<String, Integer> map = new HashMap<String, Integer>();
-		
-	
+
 		tokenizer.initialize(content);
-		for(Token t : tokenizer.getAllTokens()){
+		for (Token t : tokenizer.getAllTokens()) {
 			String word = t.getText().trim();
-//			if (skips.contains(word)){
-//				continue;
-//			}
-//			else{
-				if (map.containsKey(word)){
-					int newvalue = map.get(word) + 1;
-					map.put(word, newvalue);
-				}
-				else{
-					map.put(word, 1);
-				}
-//			}
+			// if (skips.contains(word)){
+			// continue;
+			// }
+			// else{
+			if (map.containsKey(word)) {
+				int newvalue = map.get(word) + 1;
+				map.put(word, 1);
+			} else {
+				map.put(word, 1);
+			}
+			// }
 		}
 		return map;
 
 	}
-	public static boolean calculateLocalSentence(ExtendedMentionDoc mention, HashMap<String, Integer> localMap, boolean withMatchRate) throws Exception{
+
+	public static boolean calculateLocalSentence(ExtendedMentionDoc mention,
+			HashMap<String, Integer> localMap, boolean withMatchRate)
+			throws Exception {
 		ArrayList<CandidateDoc> categories = mention.getCandidates();
 		FeatureSetDoc fsd = new FeatureSetDoc();
 		fsd.setMentionKey(mention.getKey());
@@ -169,199 +173,207 @@ public class LocalSentence {
 		double max = 0;
 		int max_index = -1;
 		int index = 0;
-		for (CandidateDoc cd:categories){
+		for (CandidateDoc cd : categories) {
 			double value = 0;
-			
+
 			int candId = cd.getConcept().getTitleId();
 			WikiExtractedPage candPage = adapter.getPage(candId);
 			ArrayList<WikiSection> candSections = candPage.getSections();
-			if (candSections.size() == 0){
-				System.out.println("Error: Candidate has no sections");
-				value = 0;
+			int glossEndOffset = candPage.getPlainText().length();
+			if (candSections.size() > 0) {
+				glossEndOffset = candPage.getSections().get(0).getOffset();
 			}
-			else{
-				String candisection = candPage.getPlainText().substring(0, candPage.getSections().get(0).getOffset());
-				HashMap<String, Integer> sectionMap = tokenizeParagraph(candisection);
-				value = 0;
-				double up = 0;
-				double down = 0;
-				double downleft = 0;
-				double downright = 0;
-				for (String key : localMap.keySet()) {
-					if (sectionMap.containsKey(key)){
-						up += localMap.get(key) * sectionMap.get(key);
-					}
-					downleft += localMap.get(key) * localMap.get(key);
-				}//for
-				for (String key : sectionMap.keySet()) {
-						downright += sectionMap.get(key) * sectionMap.get(key);
-				}//for
-				down = Math.sqrt(downleft) * Math.sqrt(downright);
-//				down = Math.sqrt(down);
-				if (down !=0){
-					value = up / down;
+			String candisection = candPage.getPlainText().substring(0,
+					glossEndOffset);
+			HashMap<String, Integer> sectionMap = tokenizeParagraph(candisection);
+			value = 0;
+			double up = 0;
+			double down = 0;
+			double downleft = 0;
+			double downright = 0;
+			for (String key : localMap.keySet()) {
+				if (sectionMap.containsKey(key)) {
+					up += localMap.get(key) * sectionMap.get(key);
 				}
-			}//else
-					
-			
+				downleft += localMap.get(key) * localMap.get(key);
+			}// for
+			for (String key : sectionMap.keySet()) {
+				downright += sectionMap.get(key) * sectionMap.get(key);
+			}// for
+			down = Math.sqrt(downleft) * Math.sqrt(downright);
+			// down = Math.sqrt(down);
+			if (down != 0) {
+				value = up / down;
+				
+			}
+			value = up;
+			boolean correct = cd.getConcept().getTitleId() == mention.getGold()
+					.getTitleId();
+			System.out.println("Value: " + value + ", " + correct + "("+cd.getConcept() + " vs " + mention.getGold()+")");
+
 			FeatureDoc fd = new FeatureDoc();
 			fd.setConceptId(cd.getConcept().getTitleId());
 			fd.setFeatureValue(featurename, new FeatureValue(value));
 			fds.add(fd);
-			
-			if (value > max){
+
+			if (value > max) {
 				max = value;
 				max_index = index;
 			}
-			index ++;
+			index++;
 		}
-		
-		if (withMatchRate == true){
-			if (max_index != -1){
-				int categoryBestId = categories.get(max_index).getConcept().getTitleId();
+
+		if (withMatchRate == true) {
+			if (max_index != -1) {
+				int categoryBestId = categories.get(max_index).getConcept()
+						.getTitleId();
 				int goldId = mention.getGold().getTitleId();
-				if (categoryBestId == goldId){
-					match ++;
-				}
-				else{
-//					System.out.println("Wrong case : \n");
-//					System.out.println("Local map:");
-//					System.out.println(localMap);
-//					System.out.println();
-//					System.out.println("Gold: " + mention.getGold().getTitle());
-//					WikiExtractedPage tmpPage = adapter.getPage(mention.getGold().getTitleId());
-//					String section = tmpPage.getPlainText().substring(0, tmpPage.getSections().get(0).getOffset());
+				if (categoryBestId == goldId) {
+					match++;
+					System.out.println("Right Value:  " + max + ".");
+				} else {
+					System.out.println("Wrong case : \n");
+					System.out.println("Local map:");
+					System.out.println(localMap);
+					System.out.println();
+					System.out.println("Gold: " + mention.getGold().getTitle());
+//					WikiExtractedPage tmpPage = adapter.getPage(mention
+//							.getGold().getTitleId());
+//					String section = tmpPage.getPlainText().substring(0,
+//							tmpPage.getSections().get(0).getOffset());
 //					HashMap<String, Integer> sectionMap = tokenizeParagraph(section);
 //					System.out.println("Section map:");
 //					System.out.println(sectionMap);
-//					
-//					System.out.println();
-//					System.out.println("Pick up : " + categories.get(max_index).getConcept().getTitle());
-//					tmpPage = adapter.getPage(categories.get(max_index).getConcept().getTitleId());
+
+					System.out.println();
+					System.out.println("Pick up : "+ categories.get(max_index).getConcept().getTitle());
+//					tmpPage = adapter.getPage(categories.get(max_index)
+//							.getConcept().getTitleId());
 //					System.out.println("Section map:");
-//					section = tmpPage.getPlainText().substring(0, tmpPage.getSections().get(0).getOffset());
+//					section = tmpPage.getPlainText().substring(0,
+//							tmpPage.getSections().get(0).getOffset());
 //					sectionMap = tokenizeParagraph(section);
 //					System.out.println(sectionMap);
-					
+					System.out.println("Wrong value:" + max + ".");
+
 				}
-				System.out.println("---------------------------------------------------");
+				System.out
+						.println("---------------------------------------------------");
 				System.out.println("Matched : " + match);
-				System.out.println("---------------------------------------------------");
+				System.out
+						.println("---------------------------------------------------");
 			}
 		}
-		
+
 		fsd.setFeatureDocs(fds);
 		boolean uploadResult = true;
-		
-		try{
+
+		try {
 			uploadResult = adapter.uploadMentionFeature(fsd);
-		}
-		catch(Exception e){
+		} catch (Exception e) {
 			uploadResult = false;
 		}
 		return uploadResult;
-//		System.out.println(uploadResult);
-//		if (max_index == -1){
-//			//no best
-//			if (uploadResult == true){
-//				return CalculateCategoryFeature.NOBEST_UPLOADSUCESS;
-//			}
-//			else{
-//				return CalculateCategoryFeature.NOBEST_UPLOADFAILED;
-//			}
-//		}
-//		else{
-//			//has best
-//			if (uploadResult == true){
-//				return CalculateCategoryFeature.FINDBEST_UPLOADSUCESS;
-//			}
-//			else{
-//				return CalculateCategoryFeature.FINDBEST_UPLOADFAILED;
-//			}
-//		}
+		// System.out.println(uploadResult);
+		// if (max_index == -1){
+		// //no best
+		// if (uploadResult == true){
+		// return CalculateCategoryFeature.NOBEST_UPLOADSUCESS;
+		// }
+		// else{
+		// return CalculateCategoryFeature.NOBEST_UPLOADFAILED;
+		// }
+		// }
+		// else{
+		// //has best
+		// if (uploadResult == true){
+		// return CalculateCategoryFeature.FINDBEST_UPLOADSUCESS;
+		// }
+		// else{
+		// return CalculateCategoryFeature.FINDBEST_UPLOADFAILED;
+		// }
+		// }
 	}
-	
-	public static void processMention(ExtendedMentionDoc mention, boolean withMatchRate) throws Exception{
+
+	public static void processMention(ExtendedMentionDoc mention,
+			boolean withMatchRate) throws Exception {
 		String localSentence = getLocalSentence(mention);
-		HashMap<String, Integer> localSentenceMap =tokenizeParagraph(localSentence);
+		HashMap<String, Integer> localSentenceMap = tokenizeParagraph(localSentence);
 		calculateLocalSentence(mention, localSentenceMap, withMatchRate);
-		
+
 		System.out.println(localSentenceMap);
 	}
-	public static void processMentions(ArrayList<ExtendedMentionDoc> mentions, boolean withMatchRate) throws Exception{
+
+	public static void processMentions(ArrayList<ExtendedMentionDoc> mentions,
+			boolean withMatchRate) throws Exception {
 		match = 0;
 		caredMentions = 0;
 		int mentionNum = mentions.size();
 		int count = 1;
-		
-		for (ExtendedMentionDoc md:mentions){
-			System.out.println("Process " + count + " / " + mentionNum + " : " + md.getSurface() + " : " + md.getKey());
+
+		for (ExtendedMentionDoc md : mentions) {
+			System.out.println("Process " + count + " / " + mentionNum + " : "
+					+ md.getSurface() + " : " + md.getKey());
 			ArrayList<CandidateDoc> candidates = md.getCandidates();
 			int numCand = candidates.size();
-			if (numCand == 0){
+			if (numCand == 0) {
 				System.out.println("Error: no candidates found");
-			}
-			else if (numCand == 1){
+			} else if (numCand == 1) {
 				boolean result = uploadUniqueMention(md);
-				if (result == true){
+				if (result == true) {
 					System.out.println("Upload unique mention successful");
-				}
-				else{
+				} else {
 					System.out.println("Error: upload unique mention failed");
 				}
-			}
-			else{
-				caredMentions ++;
+			} else {
+				caredMentions++;
 				processMention(md, withMatchRate);
 			}
 			System.out.println("");
-			count ++;
+			count++;
 		}
 	}
 
-	public static void main(String[] args) throws Exception{
-//		int caseNo = 0;
-		int caseNo = 1;
-//		int caseNo = 2;
-		
+	public static void main(String[] args) throws Exception {
+		int caseNo = 0;
+//		 int caseNo = 1;
+		// int caseNo = 2;
+
 		// TODO Auto-generated method stub
 		DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
 		Date startdate = new Date();
 		System.out.println("Program start!");
-		
-		
+
 		System.out.println("Step 1: Getting all mentions");
-		ArrayList<ExtendedMentionDoc> mentions; 
+		ArrayList<ExtendedMentionDoc> mentions;
 		boolean withMatchRate;
-		if (caseNo == 0){
-			mentions = adapter.getMentions(true, true);// true false   and false false
+		if (caseNo == 0) {
+			mentions = adapter.getMentions(true, true);// true false and false
+														// false
 			withMatchRate = true;
-		}
-		else if (caseNo == 1){
-			mentions = adapter.getMentions(true, false);// true false   and false false
+		} else if (caseNo == 1) {
+			mentions = adapter.getMentions(true, false);// true false and false
+														// false
 			withMatchRate = true;
-		}
-		else{
+		} else {
 			withMatchRate = false;
-			mentions = adapter.getMentions(false, false);// true false   and false false
+			mentions = adapter.getMentions(false, false);// true false and false
+															// false
 		}
 		System.out.println("Found " + mentions.size() + " mentions\n");
-		
-		
+
 		processMentions(mentions, withMatchRate);
-		
-		if (withMatchRate == true){
+
+		if (withMatchRate == true) {
 			System.out.println("Match rate : " + match + " / " + caredMentions);
 		}
-		
-		
-		
+
 		System.out.println("Program start @");
 		System.out.println(dateFormat.format(startdate));
 		Date date = new Date();
 		System.out.println("Program end@");
 		System.out.println(dateFormat.format(date));
-		
+
 	}// main
 
 }
