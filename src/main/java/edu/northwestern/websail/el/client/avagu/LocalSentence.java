@@ -312,7 +312,7 @@ public class LocalSentence {
 		tokenizer.setStopwords(skips);
 	}
 
-	public static boolean uploadUniqueMention(ExtendedMentionDoc mention)
+	public static boolean uploadUniqueMention(ExtendedMentionDoc mention, boolean withMatchRate)
 			throws Exception {
 		ArrayList<CandidateDoc> candidates = mention.getCandidates();
 		int numCand = candidates.size();
@@ -320,8 +320,10 @@ public class LocalSentence {
 			return false;
 		}
 		
-		if (candidates.get(0).getConcept().getTitleId() == mention.getGold().getTitleId()){
-			uniqueMentionMatch ++;
+		if (withMatchRate == true){
+			if (candidates.get(0).getConcept().getTitleId() == mention.getGold().getTitleId()){
+				uniqueMentionMatch ++;
+			}
 		}
 
 		FeatureSetDoc fsd = new FeatureSetDoc();
@@ -464,6 +466,8 @@ public class LocalSentence {
 				
 			}
 			value = up;
+			
+			if (withMatchRate == true){
 			boolean correct = cd.getConcept().getTitleId() == mention.getGold()
 					.getTitleId();
 			String mark = "";
@@ -472,6 +476,7 @@ public class LocalSentence {
 			}
 //			System.out.println("Value: " + value + ", " + mark + "("+cd.getConcept() + " vs " + mention.getGold()+")");
 			System.out.println("Value: " + value + ", " + mark + "("+cd.getConcept() + ")");
+			}
 
 			FeatureDoc fd = new FeatureDoc();
 			fd.setConceptId(cd.getConcept().getTitleId());
@@ -589,7 +594,7 @@ public class LocalSentence {
 				System.out.println("Error: no candidates found");
 			} else if (numCand == 1) {
 				uniqueMentions ++;
-				boolean result = uploadUniqueMention(md);
+				boolean result = uploadUniqueMention(md, withMatchRate);
 				if (result == true) {
 					System.out.println("Upload unique mention successful");
 				} else {
@@ -606,8 +611,8 @@ public class LocalSentence {
 
 	public static void main(String[] args) throws Exception {
 //		int caseNo = 0;
-		 int caseNo = 1;
-		// int caseNo = 2;
+//		 int caseNo = 1;
+		 int caseNo = 2;
 
 		// TODO Auto-generated method stub
 		DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
