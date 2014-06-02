@@ -361,6 +361,7 @@ public class LocalSentence {
 		for (i = startOffset; i >= 0; i--) {
 			if (plaintext.charAt(i) == '\n'){
 				localStart = i + 1;
+				break;
 			}
 			if (plaintext.charAt(i) == '.') {
 				if (firstTime == true) {
@@ -380,6 +381,7 @@ public class LocalSentence {
 		for (i = endOffset; i < plaintext.length(); i++) {
 			if (plaintext.charAt(i) == '\n'){
 				localEnd = i;
+				break;
 			}
 			if (plaintext.charAt(i) == '.') {
 				if (firstTime == true) {
