@@ -37,7 +37,15 @@ public class LocalSentence {
 	private static int ambiguousMentionMatch = 0;
 	
 	private static int caredMentions = 0;
-	public static final String featurename = "ava.localsentence";
+//	public static final String featurename = "ava.localsentence";
+	public static final String[] featurenames = {"ava.localsentence", "ava.mentionsentence","ava.mentionstring"};
+//	public static int featureNo = 0;
+//	public static int featureNo = 1;
+	public static int featureNo = 2;
+//	public static int caseNo = 0;
+	public static final int caseNo = 1;
+//	public static final int caseNo = 2;
+	
 
 	private static StanfordNLPTokenizer tokenizer = new StanfordNLPTokenizer();
 
@@ -332,7 +340,7 @@ public class LocalSentence {
 		FeatureDoc fd1 = new FeatureDoc();
 		fd1.setConceptId(candidates.get(0).getConcept().getTitleId());
 
-		fd1.setFeatureValue(featurename, new FeatureValue(1.0));
+		fd1.setFeatureValue(featurenames[featureNo], new FeatureValue(1.0));
 
 		fds.add(fd1);
 		fsd.setFeatureDocs(fds);
@@ -344,7 +352,51 @@ public class LocalSentence {
 		}
 
 	}
+	public static String getMentionString(ExtendedMentionDoc mention){
+		return mention.getSurface();
+	}
+	public static String getMentionSentence(ExtendedMentionDoc mention)
+			throws Exception {
+		WikiExtractedPage page = adapter.getPage(Integer.parseInt(mention
+				.getArticle().getSourceId()));
+		String localSentence;
+		String plaintext = page.getPlainText();
+		int startOffset = mention.getStartOffset();
+		int endOffset = mention.getEndOffset();
 
+		int localStart = 0;
+		int localEnd = 0;
+		int i;
+		for (i = startOffset; i >= 0; i--) {
+			if (plaintext.charAt(i) == '\n'){
+				localStart = i + 1;
+				break;
+			}
+			if (plaintext.charAt(i) == '.') {
+				localStart = i + 1;
+				break;
+			}
+			
+		}
+		if (i == -1) {
+			localStart = 0;
+		}
+		for (i = endOffset; i < plaintext.length(); i++) {
+			if (plaintext.charAt(i) == '\n'){
+				localEnd = i;
+				break;
+			}
+			if (plaintext.charAt(i) == '.') {
+					localEnd = i;
+					break;
+			}
+		}
+		if (i == plaintext.length()) {
+			localEnd = plaintext.length();
+		}
+		localSentence = plaintext.substring(localStart, localEnd);
+		return localSentence;
+	}
 	public static String getLocalSentence(ExtendedMentionDoc mention)
 			throws Exception {
 		WikiExtractedPage page = adapter.getPage(Integer.parseInt(mention
@@ -482,7 +534,7 @@ public class LocalSentence {
 
 			FeatureDoc fd = new FeatureDoc();
 			fd.setConceptId(cd.getConcept().getTitleId());
-			fd.setFeatureValue(featurename, new FeatureValue(value));
+			fd.setFeatureValue(featurenames[featureNo], new FeatureValue(value));
 			fds.add(fd);
 
 			if (value > max) {
@@ -568,7 +620,19 @@ public class LocalSentence {
 
 	public static void processMention(ExtendedMentionDoc mention,
 			boolean withMatchRate) throws Exception {
-		String localSentence = getLocalSentence(mention);
+		String localSentence = "";
+		if (featureNo == 0){
+			localSentence = getLocalSentence(mention);
+		}
+		else if (featureNo == 1){
+			localSentence = getMentionSentence(mention);
+		}
+		else if (featureNo == 2){
+			localSentence = getMentionString(mention);
+		}
+		else{
+			System.out.println("Error: unsupport feature no");
+		}
 		HashMap<String, Integer> localSentenceMap = tokenizeParagraph(localSentence);
 		calculateLocalSentence(mention, localSentenceMap, withMatchRate);
 
@@ -612,9 +676,6 @@ public class LocalSentence {
 	}
 
 	public static void main(String[] args) throws Exception {
-//		int caseNo = 0;
-//		 int caseNo = 1;
-		 int caseNo = 2;
 
 		// TODO Auto-generated method stub
 		DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
