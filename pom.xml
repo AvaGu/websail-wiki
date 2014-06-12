@@ -44,7 +44,7 @@
 		<dependency>
 			<groupId>WebSAIL</groupId>
 			<artifactId>Wikifier</artifactId>
-			<version>1.4.1-20140430.021918-3</version>
+			<version>1.4.5-20140528.020915-11</version>
 		</dependency>
 	</dependencies>
 
